@@ -36,7 +36,7 @@ class MasterDetailsScreen extends StatelessWidget {
               children: [
                 const Icon(Icons.date_range),
                 const SizedBox(width: 8),
-                Text(event.date),
+                Text(event.startDate),
               ],
             ),
             const SizedBox(height: 24),

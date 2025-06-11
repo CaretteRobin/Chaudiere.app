@@ -1,13 +1,13 @@
 class Event {
   final String title;
   final String category;
-  final String date;
+  final String startDate;
   final String description;
 
   Event({
     required this.title,
     required this.category,
-    required this.date,
+    required this.startDate,
     required this.description,
   });
 
@@ -15,7 +15,7 @@ class Event {
     return Event(
       title: json['title'] ?? '',
       category: json['category'] ?? '',
-      date: json['date'] ?? '',
+      startDate: json['start_date'] ?? '',
       description: json['description'] ?? '',
     );
   }
