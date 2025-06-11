@@ -22,4 +22,13 @@ class EventRepository {
     events.sort((a, b) => a.title.compareTo(b.title)); // Tri par titre
     return events;
   }
+
+  Future<List<Event>> searchEventsByTitle(String query) async {
+    List<Event> events = await fetchEvents();
+    return events
+        .where(
+          (event) => event.title.toLowerCase().contains(query.toLowerCase()),
+        )
+        .toList();
+  }
 }
