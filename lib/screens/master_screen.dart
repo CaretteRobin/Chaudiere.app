@@ -15,16 +15,29 @@ class MasterScreen extends StatefulWidget {
 class _MasterScreenState extends State<MasterScreen> {
   final EventRepository eventRepository = EventRepository();
   late Future<List<Event>> eventsFuture;
+  String? selectedCategory;
   SortType currentSort = SortType.title;
 
   @override
   void initState() {
     super.initState();
-    eventsFuture = _fetchSortedEvents();
+    eventsFuture = _fetchFilteredAndSortedEvents();
   }
 
-  Future<List<Event>> _fetchSortedEvents() async {
+  Future<List<Event>> _fetchFilteredAndSortedEvents() async {
     List<Event> events = await eventRepository.fetchEvents();
+    // Filtrage par catégorie si besoin
+    if (selectedCategory != null && selectedCategory!.isNotEmpty) {
+      events =
+          events
+              .where(
+                (event) =>
+                    event.category.toLowerCase() ==
+                    selectedCategory!.toLowerCase(),
+              )
+              .toList();
+    }
+    // Tri selon currentSort
     switch (currentSort) {
       case SortType.dateAsc:
         events.sort((a, b) => a.startDate.compareTo(b.startDate));
@@ -42,10 +55,27 @@ class _MasterScreenState extends State<MasterScreen> {
     return events;
   }
 
+  void _filterByCategory(String? category) {
+    setState(() {
+      selectedCategory = category;
+      eventsFuture = _fetchFilteredAndSortedEvents();
+    });
+  }
+
   void _onSortChanged(SortType sortType) {
     setState(() {
       currentSort = sortType;
-      eventsFuture = _fetchSortedEvents();
+      eventsFuture = _fetchFilteredAndSortedEvents();
+    });
+  }
+
+  void _onSearch(String query) {
+    setState(() {
+      if (query.isEmpty) {
+        eventsFuture = _fetchFilteredAndSortedEvents();
+      } else {
+        eventsFuture = eventRepository.searchEventsByTitle(query);
+      }
     });
   }
 
@@ -88,11 +118,22 @@ class _MasterScreenState extends State<MasterScreen> {
                   ),
                 ],
           ),
-          IconButton(
+          PopupMenuButton<String>(
             icon: const Icon(Icons.filter_list),
-            onPressed: () {
-              // Action pour le bouton de filtre
-            },
+            onSelected: _filterByCategory,
+            itemBuilder:
+                (context) => [
+                  const PopupMenuItem(value: null, child: Text('Tous')),
+                  const PopupMenuItem(value: 'Concert', child: Text('Concert')),
+                  const PopupMenuItem(
+                    value: 'Exposition',
+                    child: Text('Exposition'),
+                  ),
+                  const PopupMenuItem(
+                    value: 'Conférence',
+                    child: Text('Conférence'),
+                  ),
+                ],
           ),
         ],
       ),
