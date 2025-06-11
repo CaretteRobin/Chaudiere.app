@@ -13,6 +13,7 @@ class MasterScreen extends StatefulWidget {
 class _MasterScreenState extends State<MasterScreen> {
   final EventRepository eventRepository = EventRepository();
   late Future<List<Event>> eventsFuture;
+  String? selectedCategory;
 
   @override
   void initState() {
@@ -20,12 +21,14 @@ class _MasterScreenState extends State<MasterScreen> {
     eventsFuture = eventRepository.fetchAndSortEvents();
   }
 
-  void _onSearch(String query) {
+  void _filterByCategory(String? category) {
     setState(() {
-      if (query.isEmpty) {
+      selectedCategory = category;
+      if (category == null || category.isEmpty) {
         eventsFuture = eventRepository.fetchAndSortEvents();
       } else {
-        eventsFuture = eventRepository.searchEventsByTitle(query);
+        eventsFuture = eventRepository.fetchEvents().then((events) =>
+            events.where((event) => event.category.toLowerCase() == category.toLowerCase()).toList());
       }
     });
   }
@@ -46,11 +49,27 @@ class _MasterScreenState extends State<MasterScreen> {
               );
             },
           ),
-          IconButton(
+          PopupMenuButton<String>(
             icon: const Icon(Icons.filter_list),
-            onPressed: () {
-              // Action pour le bouton de filtre
-            },
+            onSelected: _filterByCategory,
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: null,
+                child: Text('Tous'),
+              ),
+              const PopupMenuItem(
+                value: 'Concert',
+                child: Text('Concert'),
+              ),
+              const PopupMenuItem(
+                value: 'Exposition',
+                child: Text('Exposition'),
+              ),
+              const PopupMenuItem(
+                value: 'Conférence',
+                child: Text('Conférence'),
+              ),
+            ],
           ),
         ],
       ),
