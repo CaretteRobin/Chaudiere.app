@@ -57,10 +57,15 @@ class _MasterScreenState extends State<MasterScreen> {
 
   void _filterByCategory(String? category) {
     setState(() {
-      selectedCategory = category;
+      if (category == null || category == 'Tous') {
+        selectedCategory = null;
+      } else {
+        selectedCategory = category;
+      }
       eventsFuture = _fetchFilteredAndSortedEvents();
     });
   }
+
 
   void _onSortChanged(SortType sortType) {
     setState(() {
@@ -113,7 +118,7 @@ class _MasterScreenState extends State<MasterScreen> {
             onSelected: _filterByCategory,
             itemBuilder:
                 (context) => [
-                  const PopupMenuItem(value: null, child: Text('Tous')),
+                  const PopupMenuItem(value: 'Tous', child: Text('Tous')),
                   const PopupMenuItem(value: 'Concert', child: Text('Concert')),
                   const PopupMenuItem(
                     value: 'Exposition',
