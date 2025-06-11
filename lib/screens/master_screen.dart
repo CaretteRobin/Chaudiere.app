@@ -3,6 +3,8 @@ import '../core/models/event.dart';
 import '../repositories/event_repository.dart';
 import 'master_details.dart';
 
+enum SortType { dateAsc, dateDesc, title, category }
+
 class MasterScreen extends StatefulWidget {
   const MasterScreen({super.key});
 
@@ -13,20 +15,37 @@ class MasterScreen extends StatefulWidget {
 class _MasterScreenState extends State<MasterScreen> {
   final EventRepository eventRepository = EventRepository();
   late Future<List<Event>> eventsFuture;
+  SortType currentSort = SortType.title;
 
   @override
   void initState() {
     super.initState();
-    eventsFuture = eventRepository.fetchAndSortEvents();
+    eventsFuture = _fetchSortedEvents();
   }
 
-  void _onSearch(String query) {
+  Future<List<Event>> _fetchSortedEvents() async {
+    List<Event> events = await eventRepository.fetchEvents();
+    switch (currentSort) {
+      case SortType.dateAsc:
+        events.sort((a, b) => a.startDate.compareTo(b.startDate));
+        break;
+      case SortType.dateDesc:
+        events.sort((a, b) => b.startDate.compareTo(a.startDate));
+        break;
+      case SortType.title:
+        events.sort((a, b) => a.title.compareTo(b.title));
+        break;
+      case SortType.category:
+        events.sort((a, b) => a.category.compareTo(b.category));
+        break;
+    }
+    return events;
+  }
+
+  void _onSortChanged(SortType sortType) {
     setState(() {
-      if (query.isEmpty) {
-        eventsFuture = eventRepository.fetchAndSortEvents();
-      } else {
-        eventsFuture = eventRepository.searchEventsByTitle(query);
-      }
+      currentSort = sortType;
+      eventsFuture = _fetchSortedEvents();
     });
   }
 
@@ -45,6 +64,29 @@ class _MasterScreenState extends State<MasterScreen> {
                 delegate: EventSearchDelegate(eventRepository),
               );
             },
+          ),
+          PopupMenuButton<SortType>(
+            icon: const Icon(Icons.sort),
+            onSelected: _onSortChanged,
+            itemBuilder:
+                (context) => [
+                  const PopupMenuItem(
+                    value: SortType.dateAsc,
+                    child: Text('Date ascendante'),
+                  ),
+                  const PopupMenuItem(
+                    value: SortType.dateDesc,
+                    child: Text('Date descendante'),
+                  ),
+                  const PopupMenuItem(
+                    value: SortType.title,
+                    child: Text('Titre (A-Z)'),
+                  ),
+                  const PopupMenuItem(
+                    value: SortType.category,
+                    child: Text('Catégorie (A-Z)'),
+                  ),
+                ],
           ),
           IconButton(
             icon: const Icon(Icons.filter_list),
