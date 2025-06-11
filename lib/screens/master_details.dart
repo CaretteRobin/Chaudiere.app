@@ -10,40 +10,43 @@ class MasterDetailsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Détail de l\'événement'),
+        title: Text(event.title),
         backgroundColor: const Color.fromRGBO(79, 70, 229, 1),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(24.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(event.title,
-                style: Theme.of(context)
-                    .textTheme
-                    .titleLarge
-                    ?.copyWith(fontWeight: FontWeight.bold)),
+            Text(
+              event.title,
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             const SizedBox(height: 16),
             Row(
               children: [
-                const Icon(Icons.category),
+                const Icon(Icons.calendar_today, color: Colors.grey),
                 const SizedBox(width: 8),
-                Text(event.category),
+                Text(
+                  event.startDate,
+                  style: const TextStyle(fontSize: 16),
+                ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             Row(
               children: [
-                const Icon(Icons.date_range),
+                const Icon(Icons.category, color: Colors.grey),
                 const SizedBox(width: 8),
-                Text(event.startDate),
+                Text(
+                  event.category,
+                  style: const TextStyle(fontSize: 16),
+                ),
               ],
             ),
-            const SizedBox(height: 24),
-            const Text("Description",
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-            const SizedBox(height: 8),
-            Text(event.description),
           ],
         ),
       ),
