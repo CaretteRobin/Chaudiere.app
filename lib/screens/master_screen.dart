@@ -69,16 +69,6 @@ class _MasterScreenState extends State<MasterScreen> {
     });
   }
 
-  void _onSearch(String query) {
-    setState(() {
-      if (query.isEmpty) {
-        eventsFuture = _fetchFilteredAndSortedEvents();
-      } else {
-        eventsFuture = eventRepository.searchEventsByTitle(query);
-      }
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
