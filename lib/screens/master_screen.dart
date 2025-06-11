@@ -3,6 +3,8 @@ import '../core/models/event.dart';
 import '../repositories/event_repository.dart';
 import 'master_details.dart';
 
+enum SortType { dateAsc, dateDesc, title, category }
+
 class MasterScreen extends StatefulWidget {
   const MasterScreen({super.key});
 
@@ -14,22 +16,56 @@ class _MasterScreenState extends State<MasterScreen> {
   final EventRepository eventRepository = EventRepository();
   late Future<List<Event>> eventsFuture;
   String? selectedCategory;
+  SortType currentSort = SortType.title;
 
   @override
   void initState() {
     super.initState();
-    eventsFuture = eventRepository.fetchAndSortEvents();
+    eventsFuture = _fetchFilteredAndSortedEvents();
+  }
+
+  Future<List<Event>> _fetchFilteredAndSortedEvents() async {
+    List<Event> events = await eventRepository.fetchEvents();
+    // Filtrage par catégorie si besoin
+    if (selectedCategory != null && selectedCategory!.isNotEmpty) {
+      events =
+          events
+              .where(
+                (event) =>
+                    event.category.toLowerCase() ==
+                    selectedCategory!.toLowerCase(),
+              )
+              .toList();
+    }
+    // Tri selon currentSort
+    switch (currentSort) {
+      case SortType.dateAsc:
+        events.sort((a, b) => a.startDate.compareTo(b.startDate));
+        break;
+      case SortType.dateDesc:
+        events.sort((a, b) => b.startDate.compareTo(a.startDate));
+        break;
+      case SortType.title:
+        events.sort((a, b) => a.title.compareTo(b.title));
+        break;
+      case SortType.category:
+        events.sort((a, b) => a.category.compareTo(b.category));
+        break;
+    }
+    return events;
   }
 
   void _filterByCategory(String? category) {
     setState(() {
       selectedCategory = category;
-      if (category == null || category.isEmpty) {
-        eventsFuture = eventRepository.fetchAndSortEvents();
-      } else {
-        eventsFuture = eventRepository.fetchEvents().then((events) =>
-            events.where((event) => event.category.toLowerCase() == category.toLowerCase()).toList());
-      }
+      eventsFuture = _fetchFilteredAndSortedEvents();
+    });
+  }
+
+  void _onSortChanged(SortType sortType) {
+    setState(() {
+      currentSort = sortType;
+      eventsFuture = _fetchFilteredAndSortedEvents();
     });
   }
 
@@ -49,27 +85,45 @@ class _MasterScreenState extends State<MasterScreen> {
               );
             },
           ),
+          PopupMenuButton<SortType>(
+            icon: const Icon(Icons.sort),
+            onSelected: _onSortChanged,
+            itemBuilder:
+                (context) => [
+                  const PopupMenuItem(
+                    value: SortType.dateAsc,
+                    child: Text('Date ascendante'),
+                  ),
+                  const PopupMenuItem(
+                    value: SortType.dateDesc,
+                    child: Text('Date descendante'),
+                  ),
+                  const PopupMenuItem(
+                    value: SortType.title,
+                    child: Text('Titre (A-Z)'),
+                  ),
+                  const PopupMenuItem(
+                    value: SortType.category,
+                    child: Text('Catégorie (A-Z)'),
+                  ),
+                ],
+          ),
           PopupMenuButton<String>(
             icon: const Icon(Icons.filter_list),
             onSelected: _filterByCategory,
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: null,
-                child: Text('Tous'),
-              ),
-              const PopupMenuItem(
-                value: 'Concert',
-                child: Text('Concert'),
-              ),
-              const PopupMenuItem(
-                value: 'Exposition',
-                child: Text('Exposition'),
-              ),
-              const PopupMenuItem(
-                value: 'Conférence',
-                child: Text('Conférence'),
-              ),
-            ],
+            itemBuilder:
+                (context) => [
+                  const PopupMenuItem(value: null, child: Text('Tous')),
+                  const PopupMenuItem(value: 'Concert', child: Text('Concert')),
+                  const PopupMenuItem(
+                    value: 'Exposition',
+                    child: Text('Exposition'),
+                  ),
+                  const PopupMenuItem(
+                    value: 'Conférence',
+                    child: Text('Conférence'),
+                  ),
+                ],
           ),
         ],
       ),
