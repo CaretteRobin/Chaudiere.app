@@ -4,7 +4,8 @@ class Event {
   final String id;
   final String title;
   final String category;
-  final DateTime startDate; // Changement de type
+  final DateTime startDate;
+  final String imageUrl;
   bool isFavorite;
 
   Event({
@@ -12,17 +13,17 @@ class Event {
     required this.title,
     required this.category,
     required this.startDate,
+    required this.imageUrl,
     this.isFavorite = false,
   });
 
   factory Event.fromJson(Map<String, dynamic> json) {
     return Event(
-      id: json['id'].toString(),
+      id: json['id'] ?? '',
       title: json['title'] ?? '',
       category: json['category'] ?? '',
-      startDate: json['startDate'] != null
-          ? DateTime.parse(json['startDate'])
-          : DateTime.now(),
+      startDate: DateTime.parse(json['start_date']),
+      imageUrl: json['image_url'] ?? '',
       isFavorite: false,
     );
   }
@@ -33,6 +34,7 @@ class Event {
       'title': title,
       'category': category,
       'startDate': startDate.toIso8601String(),
+      'imageUrl': imageUrl,
     };
   }
 

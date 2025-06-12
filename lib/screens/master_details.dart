@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../core/models/event.dart';
 import '../theme/app_theme.dart';
 
-class MasterDetailsScreen extends StatelessWidget {
+class MasterDetailsScreen extends StatefulWidget {
   final Event event;
   final void Function(Event event) onToggleFavorite;
 
@@ -13,14 +13,41 @@ class MasterDetailsScreen extends StatelessWidget {
   });
 
   @override
+  State<MasterDetailsScreen> createState() => _MasterDetailsScreenState();
+}
+
+class _MasterDetailsScreenState extends State<MasterDetailsScreen> {
+  late bool isFavorite;
+
+  @override
+  void initState() {
+    super.initState();
+    isFavorite = widget.event.isFavorite;
+  }
+
+  void _toggleFavorite() {
+    setState(() {
+      isFavorite = !isFavorite;
+    });
+
+    widget.event.isFavorite = isFavorite;
+    widget.onToggleFavorite(widget.event);
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final event = widget.event;
+
     return Scaffold(
       body: Column(
         children: [
+          // 🔺 Image dynamique depuis l’API
           Stack(
             children: [
-              Image.asset(
-                'assets/images/chaudiere_banner.png',
+              Image.network(
+                event.imageUrl.isNotEmpty
+                    ? event.imageUrl
+                    : 'https://via.placeholder.com/800x400.png?text=La+Chaudiere',
                 width: double.infinity,
                 height: 240,
                 fit: BoxFit.cover,
@@ -38,6 +65,8 @@ class MasterDetailsScreen extends StatelessWidget {
               ),
             ],
           ),
+
+          // 🔽 Infos événement
           Expanded(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
@@ -86,6 +115,8 @@ class MasterDetailsScreen extends StatelessWidget {
                     ],
                   ),
                   const Spacer(),
+
+                  // 💜 Bouton favoris
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
@@ -97,28 +128,14 @@ class MasterDetailsScreen extends StatelessWidget {
                         backgroundColor: AppTheme.purple600,
                         foregroundColor: Colors.white,
                       ),
-                      onPressed: () {
-                        onToggleFavorite(event);
-
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              event.isFavorite
-                                  ? 'Événement ajouté aux favoris'
-                                  : 'Événement retiré des favoris',
-                            ),
-                            duration: const Duration(seconds: 2),
-                            backgroundColor: AppTheme.purple600,
-                          ),
-                        );
-                      },
+                      onPressed: _toggleFavorite,
                       icon: Icon(
-                        event.isFavorite
+                        isFavorite
                             ? Icons.favorite
                             : Icons.favorite_border,
                       ),
                       label: Text(
-                        event.isFavorite
+                        isFavorite
                             ? 'Retirer des favoris'
                             : 'Ajouter aux favoris',
                         style: const TextStyle(fontSize: 16),
