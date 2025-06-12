@@ -1,52 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../core/models/event.dart';
 import '../screens/master_details.dart';
 import '../theme/app_theme.dart';
+import '../providers/event_provider.dart';
 
-class FavoritesScreen extends StatefulWidget {
-  final List<Event> allEvents;
-  final void Function(Event event) onToggleFavorite;
-
-  const FavoritesScreen({
-    super.key,
-    required this.allEvents,
-    required this.onToggleFavorite,
-  });
-
-  @override
-  State<FavoritesScreen> createState() => _FavoritesScreenState();
-}
-
-class _FavoritesScreenState extends State<FavoritesScreen> {
-  List<Event> favorites = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _refreshFavorites();
-  }
-
-  void _refreshFavorites() {
-    setState(() {
-      favorites = widget.allEvents.where((e) => e.isFavorite).toList();
-    });
-  }
-
-  void _handleToggleFavorite(Event event) {
-    widget.onToggleFavorite(event);
-    _refreshFavorites();
-  }
+class FavoritesScreen extends StatelessWidget {
+  const FavoritesScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final favoriteEvents = context.watch<EventProvider>().favorites;
 
     return Scaffold(
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Retour + Titre "Favoris "
+            // Retour + Titre Favoris 
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(
@@ -68,15 +40,15 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                         ),
                       ),
                       const SizedBox(width: 6),
-                      Icon(Icons.favorite, color: AppTheme.purple600),
+                      const Icon(Icons.favorite, color: AppTheme.purple600),
                     ],
                   )
                 ],
               ),
             ),
 
-            // Si aucun favori
-            if (favorites.isEmpty)
+            // Aucun favori
+            if (favoriteEvents.isEmpty)
               Expanded(
                 child: Center(
                   child: Padding(
@@ -106,10 +78,10 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              _buildCard(context, favorites.first, isDark),
+              _buildCard(context, favoriteEvents.first, isDark),
 
               // Les autres
-              if (favorites.length > 1) ...[
+              if (favoriteEvents.length > 1) ...[
                 const SizedBox(height: 24),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -126,9 +98,9 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                 Expanded(
                   child: ListView.builder(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
-                    itemCount: favorites.length - 1,
+                    itemCount: favoriteEvents.length - 1,
                     itemBuilder: (context, index) {
-                      final event = favorites[index + 1];
+                      final event = favoriteEvents[index + 1];
                       return _buildCard(context, event, isDark);
                     },
                   ),
@@ -142,6 +114,8 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   }
 
   Widget _buildCard(BuildContext context, Event event, bool isDark) {
+    final eventProvider = context.read<EventProvider>();
+
     return Card(
       color: isDark ? const Color(0xFF2A2A2A) : AppTheme.purple50,
       elevation: 2,
@@ -179,19 +153,18 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
         ),
         trailing: IconButton(
           icon: Icon(
-            event.isFavorite ? Icons.favorite : Icons.favorite_border,
+            eventProvider.isFavorite(event)
+                ? Icons.favorite
+                : Icons.favorite_border,
             color: AppTheme.purple600,
           ),
-          onPressed: () => _handleToggleFavorite(event),
+          onPressed: () => eventProvider.toggleFavorite(event),
         ),
         onTap: () {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) => MasterDetailsScreen(
-                event: event,
-                onToggleFavorite: _handleToggleFavorite,
-              ),
+              builder: (_) => MasterDetailsScreen(event: event),
             ),
           );
         },
