@@ -1,43 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
 import '../core/models/event.dart';
 import '../theme/app_theme.dart';
+import '../providers/event_provider.dart';
 
-class MasterDetailsScreen extends StatefulWidget {
+class MasterDetailsScreen extends StatelessWidget {
   final Event event;
-  final void Function(Event event) onToggleFavorite;
 
   const MasterDetailsScreen({
     super.key,
     required this.event,
-    required this.onToggleFavorite,
   });
 
   @override
-  State<MasterDetailsScreen> createState() => _MasterDetailsScreenState();
-}
-
-class _MasterDetailsScreenState extends State<MasterDetailsScreen> {
-  late bool isFavorite;
-
-  @override
-  void initState() {
-    super.initState();
-    isFavorite = widget.event.isFavorite;
-  }
-
-  void _toggleFavorite() {
-    setState(() {
-      isFavorite = !isFavorite;
-    });
-
-    widget.event.isFavorite = isFavorite;
-    widget.onToggleFavorite(widget.event);
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final event = widget.event;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final eventProvider = Provider.of<EventProvider>(context);
+    final isFavorite = eventProvider.isFavorite(event);
 
     return Scaffold(
       body: Column(
@@ -130,7 +110,9 @@ class _MasterDetailsScreenState extends State<MasterDetailsScreen> {
                         backgroundColor: AppTheme.purple600,
                         foregroundColor: Colors.white,
                       ),
-                      onPressed: _toggleFavorite,
+                      onPressed: () {
+                        eventProvider.toggleFavorite(event);
+                      },
                       icon: Icon(
                         isFavorite
                             ? Icons.favorite
