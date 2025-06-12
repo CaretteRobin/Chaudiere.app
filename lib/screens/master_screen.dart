@@ -122,7 +122,8 @@ class _MasterScreenState extends State<MasterScreen> {
                   selectedColor: AppTheme.purple600.withOpacity(0.15),
                   labelStyle: TextStyle(
                     color: selectedCategory == cat ||
-                        (cat == 'Tous' && selectedCategory == null)
+                        (cat == 'Tous' &&
+                            selectedCategory == null)
                         ? AppTheme.purple700
                         : Colors.black87,
                   ),
@@ -184,23 +185,10 @@ class _MasterScreenState extends State<MasterScreen> {
     final themeProvider = Provider.of<ThemeProvider>(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Événements'),
-        actions: [
-          IconButton(
-            icon: Icon(
-              themeProvider.themeMode == ThemeMode.light
-                  ? Icons.dark_mode
-                  : Icons.light_mode,
-            ),
-            onPressed: themeProvider.toggleTheme,
-          ),
-        ],
-      ),
       body: SafeArea(
         child: Column(
           children: [
-            // Header
+            // Header avec boutons "Favoris" et "Thème"
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               child: Row(
@@ -220,28 +208,41 @@ class _MasterScreenState extends State<MasterScreen> {
                       ),
                     ],
                   ),
-                  TextButton.icon(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) =>
-                              FavoritesScreen(allEvents: allEvents),
+                  Row(
+                    children: [
+                      TextButton.icon(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  FavoritesScreen(allEvents: allEvents),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.favorite_border,
+                            color: AppTheme.purple600),
+                        label: const Text(
+                          'Favoris',
+                          style: TextStyle(color: AppTheme.purple600),
                         ),
-                      );
-                    },
-                    icon: const Icon(Icons.favorite_border,
-                        color: AppTheme.purple600),
-                    label: const Text(
-                      'Favoris',
-                      style: TextStyle(color: AppTheme.purple600),
-                    ),
-                  )
+                      ),
+                      IconButton(
+                        icon: Icon(
+                          themeProvider.themeMode == ThemeMode.light
+                              ? Icons.dark_mode
+                              : Icons.light_mode,
+                          color: AppTheme.purple600,
+                        ),
+                        onPressed: themeProvider.toggleTheme,
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
 
-            // Search & Filter
+            // Barre de recherche
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(
@@ -303,7 +304,9 @@ class _MasterScreenState extends State<MasterScreen> {
                 itemBuilder: (context, index) {
                   final event = displayedEvents[index];
                   return Card(
-                    color: AppTheme.purple50,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? const Color(0xFF2A2A2A)
+                        : AppTheme.purple50,
                     elevation: 1.5,
                     margin: const EdgeInsets.only(bottom: 16),
                     shape: RoundedRectangleBorder(
@@ -314,15 +317,23 @@ class _MasterScreenState extends State<MasterScreen> {
                           horizontal: 16, vertical: 12),
                       title: Text(
                         event.title,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
-                          color: AppTheme.purple900,
+                          color: Theme.of(context).brightness ==
+                              Brightness.dark
+                              ? Colors.white
+                              : AppTheme.purple900,
                         ),
                       ),
                       subtitle: Text(
                         '${event.category} – ${event.getFormattedDate()}',
-                        style: const TextStyle(color: Colors.black54),
+                        style: TextStyle(
+                          color: Theme.of(context).brightness ==
+                              Brightness.dark
+                              ? Colors.white70
+                              : Colors.black54,
+                        ),
                       ),
                       trailing: IconButton(
                         icon: Icon(
