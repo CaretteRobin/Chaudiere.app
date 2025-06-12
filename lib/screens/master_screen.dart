@@ -30,7 +30,6 @@ class _MasterScreenState extends State<MasterScreen> {
   Future<List<Event>> _fetchFilteredAndSortedEvents() async {
     List<Event> events = await eventRepository.fetchEvents();
 
-    // Filtrage par recherche
     if (searchQuery.isNotEmpty) {
       events = events
           .where((e) =>
@@ -38,7 +37,6 @@ class _MasterScreenState extends State<MasterScreen> {
           .toList();
     }
 
-    // Filtrage par catégorie
     if (selectedCategory != null && selectedCategory!.isNotEmpty) {
       events = events
           .where((e) =>
@@ -46,7 +44,6 @@ class _MasterScreenState extends State<MasterScreen> {
           .toList();
     }
 
-    // ↕Tri
     switch (currentSort) {
       case SortType.dateAsc:
         events.sort((a, b) => a.startDate.compareTo(b.startDate));
@@ -111,6 +108,13 @@ class _MasterScreenState extends State<MasterScreen> {
                           label: Text(cat),
                           selected: selectedCategory == cat ||
                               (cat == 'Tous' && selectedCategory == null),
+                          selectedColor: AppTheme.purple600.withOpacity(0.15),
+                          labelStyle: TextStyle(
+                            color: selectedCategory == cat ||
+                                    (cat == 'Tous' && selectedCategory == null)
+                                ? AppTheme.purple700
+                                : Colors.black87,
+                          ),
                           onSelected: (_) {
                             Navigator.pop(context);
                             _filterByCategory(cat);
@@ -137,6 +141,12 @@ class _MasterScreenState extends State<MasterScreen> {
                   return ChoiceChip(
                     label: Text(label!),
                     selected: currentSort == sort,
+                    selectedColor: AppTheme.purple600.withOpacity(0.15),
+                    labelStyle: TextStyle(
+                      color: currentSort == sort
+                          ? AppTheme.purple700
+                          : Colors.black87,
+                    ),
                     onSelected: (_) {
                       Navigator.pop(context);
                       _onSortChanged(sort);
@@ -157,7 +167,7 @@ class _MasterScreenState extends State<MasterScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // Header
+            // 👤 Header
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               child: Row(
@@ -165,14 +175,14 @@ class _MasterScreenState extends State<MasterScreen> {
                 children: [
                   Row(
                     children: const [
-                      Icon(Icons.event, size: 28, color: AppTheme.primaryPurple),
+                      Icon(Icons.event, size: 28, color: AppTheme.purple600),
                       SizedBox(width: 8),
                       Text(
                         'Événements',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 20,
-                          color: AppTheme.primaryPurple,
+                          color: AppTheme.purple900,
                         ),
                       ),
                     ],
@@ -181,18 +191,17 @@ class _MasterScreenState extends State<MasterScreen> {
                     onPressed: () {
                       // TODO: Page de favoris
                     },
-                    icon: const Icon(Icons.star_border,
-                        color: AppTheme.primaryPurple),
+                    icon: const Icon(Icons.star_border, color: AppTheme.purple600),
                     label: const Text(
                       'Favoris',
-                      style: TextStyle(color: AppTheme.primaryPurple),
+                      style: TextStyle(color: AppTheme.purple600),
                     ),
                   )
                 ],
               ),
             ),
 
-            // Search + Filters
+            // 🔎 Search & Filter
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(
@@ -208,22 +217,21 @@ class _MasterScreenState extends State<MasterScreen> {
                           borderSide: BorderSide.none,
                         ),
                         filled: true,
-                        fillColor: Colors.grey.shade100,
+                        fillColor: AppTheme.purple50,
                       ),
                     ),
                   ),
                   const SizedBox(width: 10),
                   IconButton(
                     onPressed: () => _openFilterSortSheet(context),
-                    icon: const Icon(Icons.tune,
-                        color: AppTheme.primaryPurple),
+                    icon: const Icon(Icons.tune, color: AppTheme.purple600),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 12),
 
-            // Liste des événements
+            // 📜 Liste des événements
             Expanded(
               child: FutureBuilder<List<Event>>(
                 future: eventsFuture,
@@ -243,25 +251,32 @@ class _MasterScreenState extends State<MasterScreen> {
                     itemBuilder: (context, index) {
                       final event = events[index];
                       return Card(
+                        color: AppTheme.purple50,
+                        elevation: 1.5,
                         margin: const EdgeInsets.only(bottom: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        elevation: 2,
                         child: ListTile(
                           contentPadding: const EdgeInsets.symmetric(
                               horizontal: 16, vertical: 12),
-                          title: Text(event.title,
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.bold)),
-                          subtitle:
-                              Text('${event.category} – ${event.startDate}'),
+                          title: Text(
+                            event.title,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              color: AppTheme.purple900,
+                            ),
+                          ),
+                          subtitle: Text(
+                            '${event.category} – ${event.startDate}',
+                            style: const TextStyle(color: Colors.black54),
+                          ),
                           onTap: () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) =>
-                                    MasterDetailsScreen(event: event),
+                                builder: (_) => MasterDetailsScreen(event: event),
                               ),
                             );
                           },
