@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../core/models/event.dart';
 import '../repositories/event_repository.dart';
 import '../screens/master_details.dart';
+import '../screens/favorites_screen.dart';
 import '../theme/app_theme.dart';
+import '../theme/theme_provider.dart';
 
 enum SortType { dateAsc, dateDesc, title, category }
 
@@ -15,7 +18,8 @@ class MasterScreen extends StatefulWidget {
 
 class _MasterScreenState extends State<MasterScreen> {
   final EventRepository eventRepository = EventRepository();
-  late Future<List<Event>> eventsFuture;
+  List<Event> allEvents = [];
+  List<Event> displayedEvents = [];
 
   String? selectedCategory;
   SortType currentSort = SortType.title;
@@ -24,62 +28,69 @@ class _MasterScreenState extends State<MasterScreen> {
   @override
   void initState() {
     super.initState();
-    eventsFuture = _fetchFilteredAndSortedEvents();
+    _loadEvents();
   }
 
-  Future<List<Event>> _fetchFilteredAndSortedEvents() async {
-    List<Event> events = await eventRepository.fetchEvents();
+  Future<void> _loadEvents() async {
+    allEvents = await eventRepository.fetchEvents();
+    _applyFiltersAndSorts();
+  }
+
+  void _applyFiltersAndSorts() {
+    List<Event> filtered = List.from(allEvents);
 
     if (searchQuery.isNotEmpty) {
-      events = events
+      filtered = filtered
           .where((e) =>
-              e.title.toLowerCase().contains(searchQuery.toLowerCase()))
+          e.title.toLowerCase().contains(searchQuery.toLowerCase()))
           .toList();
     }
 
     if (selectedCategory != null && selectedCategory!.isNotEmpty) {
-      events = events
+      filtered = filtered
           .where((e) =>
-              e.category.toLowerCase() == selectedCategory!.toLowerCase())
+      e.category.toLowerCase() == selectedCategory!.toLowerCase())
           .toList();
     }
 
     switch (currentSort) {
       case SortType.dateAsc:
-        events.sort((a, b) => a.startDate.compareTo(b.startDate));
+        filtered.sort((a, b) => a.startDate.compareTo(b.startDate));
         break;
       case SortType.dateDesc:
-        events.sort((a, b) => b.startDate.compareTo(a.startDate));
+        filtered.sort((a, b) => b.startDate.compareTo(a.startDate));
         break;
       case SortType.title:
-        events.sort((a, b) => a.title.compareTo(b.title));
+        filtered.sort((a, b) => a.title.compareTo(b.title));
         break;
       case SortType.category:
-        events.sort((a, b) => a.category.compareTo(b.category));
+        filtered.sort((a, b) => a.category.compareTo(b.category));
         break;
     }
 
-    return events;
+    setState(() {
+      displayedEvents = filtered;
+    });
   }
 
   void _onSearchChanged(String query) {
     setState(() {
       searchQuery = query;
-      eventsFuture = _fetchFilteredAndSortedEvents();
+      _applyFiltersAndSorts();
     });
   }
 
   void _filterByCategory(String? category) {
     setState(() {
       selectedCategory = (category == 'Tous') ? null : category;
-      eventsFuture = _fetchFilteredAndSortedEvents();
+      _applyFiltersAndSorts();
     });
   }
 
   void _onSortChanged(SortType sortType) {
     setState(() {
       currentSort = sortType;
-      eventsFuture = _fetchFilteredAndSortedEvents();
+      _applyFiltersAndSorts();
     });
   }
 
@@ -105,21 +116,21 @@ class _MasterScreenState extends State<MasterScreen> {
                 spacing: 8,
                 children: ['Tous', 'Concert', 'Exposition', 'Conférence']
                     .map((cat) => ChoiceChip(
-                          label: Text(cat),
-                          selected: selectedCategory == cat ||
-                              (cat == 'Tous' && selectedCategory == null),
-                          selectedColor: AppTheme.purple600.withOpacity(0.15),
-                          labelStyle: TextStyle(
-                            color: selectedCategory == cat ||
-                                    (cat == 'Tous' && selectedCategory == null)
-                                ? AppTheme.purple700
-                                : Colors.black87,
-                          ),
-                          onSelected: (_) {
-                            Navigator.pop(context);
-                            _filterByCategory(cat);
-                          },
-                        ))
+                  label: Text(cat),
+                  selected: selectedCategory == cat ||
+                      (cat == 'Tous' && selectedCategory == null),
+                  selectedColor: AppTheme.purple600.withOpacity(0.15),
+                  labelStyle: TextStyle(
+                    color: selectedCategory == cat ||
+                        (cat == 'Tous' && selectedCategory == null)
+                        ? AppTheme.purple700
+                        : Colors.black87,
+                  ),
+                  onSelected: (_) {
+                    Navigator.pop(context);
+                    _filterByCategory(cat);
+                  },
+                ))
                     .toList(),
               ),
               const SizedBox(height: 24),
@@ -161,13 +172,35 @@ class _MasterScreenState extends State<MasterScreen> {
     );
   }
 
+  void _updateFavorite(Event updatedEvent) {
+    setState(() {
+      updatedEvent.isFavorite = !updatedEvent.isFavorite;
+      _applyFiltersAndSorts();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Événements'),
+        actions: [
+          IconButton(
+            icon: Icon(
+              themeProvider.themeMode == ThemeMode.light
+                  ? Icons.dark_mode
+                  : Icons.light_mode,
+            ),
+            onPressed: themeProvider.toggleTheme,
+          ),
+        ],
+      ),
       body: SafeArea(
         child: Column(
           children: [
-            // 👤 Header
+            // Header
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               child: Row(
@@ -189,9 +222,16 @@ class _MasterScreenState extends State<MasterScreen> {
                   ),
                   TextButton.icon(
                     onPressed: () {
-                      // TODO: Page de favoris
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              FavoritesScreen(allEvents: allEvents),
+                        ),
+                      );
                     },
-                    icon: const Icon(Icons.star_border, color: AppTheme.purple600),
+                    icon: const Icon(Icons.favorite_border,
+                        color: AppTheme.purple600),
                     label: const Text(
                       'Favoris',
                       style: TextStyle(color: AppTheme.purple600),
@@ -201,7 +241,7 @@ class _MasterScreenState extends State<MasterScreen> {
               ),
             ),
 
-            // 🔎 Search & Filter
+            // Search & Filter
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(
@@ -211,78 +251,100 @@ class _MasterScreenState extends State<MasterScreen> {
                       onChanged: _onSearchChanged,
                       decoration: InputDecoration(
                         hintText: 'Que cherchez-vous ?',
-                        prefixIcon: const Icon(Icons.search),
+                        hintStyle: TextStyle(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white70
+                              : Colors.black54,
+                        ),
+                        prefixIcon: Icon(
+                          Icons.search,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : Colors.black87,
+                        ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
                           borderSide: BorderSide.none,
                         ),
                         filled: true,
-                        fillColor: AppTheme.purple50,
+                        fillColor: Theme.of(context).brightness == Brightness.dark
+                            ? const Color(0xFF373737)
+                            : AppTheme.purple50,
+                      ),
+                      style: TextStyle(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white
+                            : Colors.black87,
                       ),
                     ),
                   ),
                   const SizedBox(width: 10),
                   IconButton(
                     onPressed: () => _openFilterSortSheet(context),
-                    icon: const Icon(Icons.tune, color: AppTheme.purple600),
+                    icon: Icon(
+                      Icons.tune,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white
+                          : AppTheme.purple600,
+                    ),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 12),
 
-            // 📜 Liste des événements
+            // Liste des événements
             Expanded(
-              child: FutureBuilder<List<Event>>(
-                future: eventsFuture,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  } else if (snapshot.hasError) {
-                    return Center(child: Text('Erreur : ${snapshot.error}'));
-                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return const Center(child: Text('Aucun événement trouvé'));
-                  }
-
-                  final events = snapshot.data!;
-                  return ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    itemCount: events.length,
-                    itemBuilder: (context, index) {
-                      final event = events[index];
-                      return Card(
-                        color: AppTheme.purple50,
-                        elevation: 1.5,
-                        margin: const EdgeInsets.only(bottom: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+              child: displayedEvents.isEmpty
+                  ? const Center(child: Text('Aucun événement trouvé'))
+                  : ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                itemCount: displayedEvents.length,
+                itemBuilder: (context, index) {
+                  final event = displayedEvents[index];
+                  return Card(
+                    color: AppTheme.purple50,
+                    elevation: 1.5,
+                    margin: const EdgeInsets.only(bottom: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 12),
+                      title: Text(
+                        event.title,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: AppTheme.purple900,
                         ),
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 12),
-                          title: Text(
-                            event.title,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                              color: AppTheme.purple900,
+                      ),
+                      subtitle: Text(
+                        '${event.category} – ${event.getFormattedDate()}',
+                        style: const TextStyle(color: Colors.black54),
+                      ),
+                      trailing: IconButton(
+                        icon: Icon(
+                          event.isFavorite
+                              ? Icons.favorite
+                              : Icons.favorite_border,
+                          color: AppTheme.purple600,
+                        ),
+                        onPressed: () => _updateFavorite(event),
+                      ),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => MasterDetailsScreen(
+                              event: event,
+                              onToggleFavorite: _updateFavorite,
                             ),
                           ),
-                          subtitle: Text(
-                            '${event.category} – ${event.startDate}',
-                            style: const TextStyle(color: Colors.black54),
-                          ),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => MasterDetailsScreen(event: event),
-                              ),
-                            );
-                          },
-                        ),
-                      );
-                    },
+                        );
+                      },
+                    ),
                   );
                 },
               ),
