@@ -46,7 +46,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 🔙 Retour + Titre "Favoris ❤️"
+            // Retour + Titre "Favoris "
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(
@@ -75,7 +75,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
               ),
             ),
 
-            // 🎯 Si aucun favori
+            // Si aucun favori
             if (favorites.isEmpty)
               Expanded(
                 child: Center(
@@ -93,7 +93,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                 ),
               )
             else ...[
-              // 🆕 Mon dernier favori
+              // Mon dernier favori
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Text(
@@ -108,7 +108,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
               const SizedBox(height: 12),
               _buildCard(context, favorites.first, isDark),
 
-              // ⭐️ Les autres
+              // Les autres
               if (favorites.length > 1) ...[
                 const SizedBox(height: 24),
                 Padding(
