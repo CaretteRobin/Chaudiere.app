@@ -173,10 +173,11 @@ class _MasterScreenState extends State<MasterScreen> {
     );
   }
 
-  void _updateFavorite(Event updatedEvent) {
+  void _updateFavorite(Event event) => setState(() {});
+
+  void _toggleFavoriteFromMaster(Event event) {
     setState(() {
-      updatedEvent.isFavorite = !updatedEvent.isFavorite;
-      _applyFiltersAndSorts();
+      event.isFavorite = !event.isFavorite;
     });
   }
 
@@ -337,12 +338,10 @@ class _MasterScreenState extends State<MasterScreen> {
                       ),
                       trailing: IconButton(
                         icon: Icon(
-                          event.isFavorite
-                              ? Icons.favorite
-                              : Icons.favorite_border,
+                          event.isFavorite ? Icons.favorite : Icons.favorite_border,
                           color: AppTheme.purple600,
                         ),
-                        onPressed: () => _updateFavorite(event),
+                        onPressed: () => _toggleFavoriteFromMaster(event), // MET À JOUR L'ÉTAT
                       ),
                       onTap: () {
                         Navigator.push(
@@ -350,7 +349,7 @@ class _MasterScreenState extends State<MasterScreen> {
                           MaterialPageRoute(
                             builder: (_) => MasterDetailsScreen(
                               event: event,
-                              onToggleFavorite: _updateFavorite,
+                              onToggleFavorite: _updateFavorite, // Ne double pas le toggle
                             ),
                           ),
                         );
