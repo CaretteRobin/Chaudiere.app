@@ -37,11 +37,12 @@ class _MasterDetailsScreenState extends State<MasterDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     final event = widget.event;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       body: Column(
         children: [
-          // 🔺 Image dynamique depuis l’API
+          // Image dynamique
           Stack(
             children: [
               Image.network(
@@ -66,7 +67,7 @@ class _MasterDetailsScreenState extends State<MasterDetailsScreen> {
             ],
           ),
 
-          // 🔽 Infos événement
+          // Contenu
           Expanded(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
@@ -75,24 +76,24 @@ class _MasterDetailsScreenState extends State<MasterDetailsScreen> {
                 children: [
                   Text(
                     event.title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
-                      color: AppTheme.purple900,
+                      color: isDark ? Colors.white : AppTheme.purple900,
                     ),
                   ),
                   const SizedBox(height: 24),
                   Row(
                     children: [
-                      const Icon(Icons.calendar_month_outlined,
-                          color: Colors.black87),
+                      Icon(Icons.calendar_month_outlined,
+                          color: isDark ? Colors.white70 : Colors.black87),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           event.getFormattedDate(),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 16,
-                            color: Colors.black87,
+                            color: isDark ? Colors.white70 : Colors.black87,
                           ),
                         ),
                       ),
@@ -101,14 +102,15 @@ class _MasterDetailsScreenState extends State<MasterDetailsScreen> {
                   const SizedBox(height: 16),
                   Row(
                     children: [
-                      const Icon(Icons.sell_outlined, color: Colors.black87),
+                      Icon(Icons.sell_outlined,
+                          color: isDark ? Colors.white70 : Colors.black87),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           event.category,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 16,
-                            color: Colors.black87,
+                            color: isDark ? Colors.white70 : Colors.black87,
                           ),
                         ),
                       ),
@@ -116,7 +118,7 @@ class _MasterDetailsScreenState extends State<MasterDetailsScreen> {
                   ),
                   const Spacer(),
 
-                  // 💜 Bouton favoris
+                  // Bouton favoris
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(

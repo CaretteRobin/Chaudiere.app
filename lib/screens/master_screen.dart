@@ -217,7 +217,10 @@ class _MasterScreenState extends State<MasterScreen> {
                             context,
                             MaterialPageRoute(
                               builder: (_) =>
-                                  FavoritesScreen(allEvents: allEvents),
+                                  FavoritesScreen(
+                                    allEvents: allEvents,
+                                    onToggleFavorite: _updateFavorite,
+                                  ),
                             ),
                           );
                         },
