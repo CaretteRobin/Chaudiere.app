@@ -53,4 +53,51 @@ class AppTheme {
       ),
     );
   }
+
+  static ThemeData get darkTheme {
+    return ThemeData(
+      fontFamily: 'Arial',
+      scaffoldBackgroundColor: const Color(0xFF2E2E2E),
+      // Gris foncé
+      primaryColor: purple600,
+      appBarTheme: const AppBarTheme(
+        backgroundColor: purple700,
+        foregroundColor: Colors.white,
+        elevation: 2,
+      ),
+      floatingActionButtonTheme: const FloatingActionButtonThemeData(
+        backgroundColor: purple700,
+        foregroundColor: Colors.white,
+      ),
+      colorScheme: const ColorScheme(
+        brightness: Brightness.dark,
+        primary: purple600,
+        onPrimary: Colors.white,
+        secondary: purple800,
+        onSecondary: Colors.white,
+        background: Color(0xFF2E2E2E),
+        // Gris foncé
+        onBackground: Colors.white,
+        surface: purple900,
+        onSurface: Colors.white,
+        error: Colors.red,
+        onError: Colors.black,
+      ),
+      textTheme: const TextTheme(
+        titleLarge: TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 20,
+          color: purple50,
+        ),
+        bodyLarge: TextStyle(
+          fontSize: 16,
+          color: Colors.white,
+        ),
+        bodyMedium: TextStyle(
+          fontSize: 14,
+          color: Colors.white70,
+        ),
+      ),
+    );
+  }
 }

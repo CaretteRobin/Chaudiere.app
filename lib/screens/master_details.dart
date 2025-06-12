@@ -4,15 +4,19 @@ import '../theme/app_theme.dart';
 
 class MasterDetailsScreen extends StatelessWidget {
   final Event event;
+  final void Function(Event event) onToggleFavorite;
 
-  const MasterDetailsScreen({super.key, required this.event});
+  const MasterDetailsScreen({
+    super.key,
+    required this.event,
+    required this.onToggleFavorite,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Column(
         children: [
-          // 🖼️ Image bannière sans bord arrondi
           Stack(
             children: [
               Image.asset(
@@ -34,15 +38,12 @@ class MasterDetailsScreen extends StatelessWidget {
               ),
             ],
           ),
-
-          // 🧾 Infos
           Expanded(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 🏷️ Titre
                   Text(
                     event.title,
                     style: const TextStyle(
@@ -52,17 +53,14 @@ class MasterDetailsScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 24),
-
-                  // 📅 Date
                   Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Icon(Icons.calendar_month_outlined,
                           color: Colors.black87),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          event.startDate,
+                          event.getFormattedDate(),
                           style: const TextStyle(
                             fontSize: 16,
                             color: Colors.black87,
@@ -72,10 +70,7 @@ class MasterDetailsScreen extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 16),
-
-                  // 🏷️ Catégorie
                   Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Icon(Icons.sell_outlined, color: Colors.black87),
                       const SizedBox(width: 12),
@@ -91,8 +86,6 @@ class MasterDetailsScreen extends StatelessWidget {
                     ],
                   ),
                   const Spacer(),
-
-                  // ❤️ Bouton "Ajouter aux favoris"
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
@@ -105,12 +98,30 @@ class MasterDetailsScreen extends StatelessWidget {
                         foregroundColor: Colors.white,
                       ),
                       onPressed: () {
-                        // TODO: Ajouter à favoris
+                        onToggleFavorite(event);
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              event.isFavorite
+                                  ? 'Événement ajouté aux favoris'
+                                  : 'Événement retiré des favoris',
+                            ),
+                            duration: const Duration(seconds: 2),
+                            backgroundColor: AppTheme.purple600,
+                          ),
+                        );
                       },
-                      icon: const Icon(Icons.favorite_border),
-                      label: const Text(
-                        'Ajouter aux favoris',
-                        style: TextStyle(fontSize: 16),
+                      icon: Icon(
+                        event.isFavorite
+                            ? Icons.favorite
+                            : Icons.favorite_border,
+                      ),
+                      label: Text(
+                        event.isFavorite
+                            ? 'Retirer des favoris'
+                            : 'Ajouter aux favoris',
+                        style: const TextStyle(fontSize: 16),
                       ),
                     ),
                   ),
