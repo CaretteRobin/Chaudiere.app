@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import '../core/models/event.dart';
 import '../repositories/event_repository.dart';
-import 'master_details.dart';
+import '../screens/master_details.dart';
+import '../theme/app_theme.dart';
 
 enum SortType { dateAsc, dateDesc, title, category }
 
@@ -15,8 +16,10 @@ class MasterScreen extends StatefulWidget {
 class _MasterScreenState extends State<MasterScreen> {
   final EventRepository eventRepository = EventRepository();
   late Future<List<Event>> eventsFuture;
+
   String? selectedCategory;
   SortType currentSort = SortType.title;
+  String searchQuery = '';
 
   @override
   void initState() {
@@ -26,18 +29,24 @@ class _MasterScreenState extends State<MasterScreen> {
 
   Future<List<Event>> _fetchFilteredAndSortedEvents() async {
     List<Event> events = await eventRepository.fetchEvents();
-    // Filtrage par catégorie si besoin
-    if (selectedCategory != null && selectedCategory!.isNotEmpty) {
-      events =
-          events
-              .where(
-                (event) =>
-                    event.category.toLowerCase() ==
-                    selectedCategory!.toLowerCase(),
-              )
-              .toList();
+
+    // Filtrage par recherche
+    if (searchQuery.isNotEmpty) {
+      events = events
+          .where((e) =>
+              e.title.toLowerCase().contains(searchQuery.toLowerCase()))
+          .toList();
     }
-    // Tri selon currentSort
+
+    // Filtrage par catégorie
+    if (selectedCategory != null && selectedCategory!.isNotEmpty) {
+      events = events
+          .where((e) =>
+              e.category.toLowerCase() == selectedCategory!.toLowerCase())
+          .toList();
+    }
+
+    // ↕Tri
     switch (currentSort) {
       case SortType.dateAsc:
         events.sort((a, b) => a.startDate.compareTo(b.startDate));
@@ -52,20 +61,23 @@ class _MasterScreenState extends State<MasterScreen> {
         events.sort((a, b) => a.category.compareTo(b.category));
         break;
     }
+
     return events;
   }
 
-  void _filterByCategory(String? category) {
+  void _onSearchChanged(String query) {
     setState(() {
-      if (category == null || category == 'Tous') {
-        selectedCategory = null;
-      } else {
-        selectedCategory = category;
-      }
+      searchQuery = query;
       eventsFuture = _fetchFilteredAndSortedEvents();
     });
   }
 
+  void _filterByCategory(String? category) {
+    setState(() {
+      selectedCategory = (category == 'Tous') ? null : category;
+      eventsFuture = _fetchFilteredAndSortedEvents();
+    });
+  }
 
   void _onSortChanged(SortType sortType) {
     setState(() {
@@ -74,173 +86,195 @@ class _MasterScreenState extends State<MasterScreen> {
     });
   }
 
+  void _openFilterSortSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) {
+        return Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text('Filtrer par catégorie',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                children: ['Tous', 'Concert', 'Exposition', 'Conférence']
+                    .map((cat) => ChoiceChip(
+                          label: Text(cat),
+                          selected: selectedCategory == cat ||
+                              (cat == 'Tous' && selectedCategory == null),
+                          onSelected: (_) {
+                            Navigator.pop(context);
+                            _filterByCategory(cat);
+                          },
+                        ))
+                    .toList(),
+              ),
+              const SizedBox(height: 24),
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text('Trier par',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                children: SortType.values.map((sort) {
+                  final label = {
+                    SortType.dateAsc: 'Date ↑',
+                    SortType.dateDesc: 'Date ↓',
+                    SortType.title: 'Titre (A-Z)',
+                    SortType.category: 'Catégorie (A-Z)',
+                  }[sort];
+                  return ChoiceChip(
+                    label: Text(label!),
+                    selected: currentSort == sort,
+                    onSelected: (_) {
+                      Navigator.pop(context);
+                      _onSortChanged(sort);
+                    },
+                  );
+                }).toList(),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Liste des événements'),
-        backgroundColor: const Color.fromRGBO(79, 70, 229, 1),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () {
-              showSearch(
-                context: context,
-                delegate: EventSearchDelegate(eventRepository),
-              );
-            },
-          ),
-          PopupMenuButton<SortType>(
-            icon: const Icon(Icons.sort),
-            onSelected: _onSortChanged,
-            itemBuilder:
-                (context) => [
-                  const PopupMenuItem(
-                    value: SortType.dateAsc,
-                    child: Text('Date ascendante'),
-                  ),
-                  const PopupMenuItem(
-                    value: SortType.dateDesc,
-                    child: Text('Date descendante'),
-                  ),
-                  const PopupMenuItem(
-                    value: SortType.title,
-                    child: Text('Titre (A-Z)'),
-                  ),
-                  const PopupMenuItem(
-                    value: SortType.category,
-                    child: Text('Catégorie (A-Z)'),
-                  ),
-                ],
-          ),
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.filter_list),
-            onSelected: _filterByCategory,
-            itemBuilder:
-                (context) => [
-                  const PopupMenuItem(value: 'Tous', child: Text('Tous')),
-                  const PopupMenuItem(value: 'Concert', child: Text('Concert')),
-                  const PopupMenuItem(
-                    value: 'Exposition',
-                    child: Text('Exposition'),
-                  ),
-                  const PopupMenuItem(
-                    value: 'Conférence',
-                    child: Text('Conférence'),
-                  ),
-                ],
-          ),
-        ],
-      ),
-      body: FutureBuilder<List<Event>>(
-        future: eventsFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Erreur : ${snapshot.error}'));
-          } else if (snapshot.hasData) {
-            final events = snapshot.data!;
-            if (events.isEmpty) {
-              return const Center(child: Text('Aucun événement trouvé'));
-            }
-            return ListView.builder(
-              itemCount: events.length,
-              itemBuilder: (context, index) {
-                final event = events[index];
-                return ListTile(
-                  title: Text(event.title),
-                  subtitle: Text('${event.category} - ${event.startDate}'),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => MasterDetailsScreen(event: event),
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Header
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: const [
+                      Icon(Icons.event, size: 28, color: AppTheme.primaryPurple),
+                      SizedBox(width: 8),
+                      Text(
+                        'Événements',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
+                          color: AppTheme.primaryPurple,
+                        ),
                       ),
-                    );
-                  },
-                );
-              },
-            );
-          } else {
-            return const Center(child: Text('Aucun événement trouvé'));
-          }
-        },
-      ),
-    );
-  }
-}
-
-class EventSearchDelegate extends SearchDelegate {
-  final EventRepository eventRepository;
-
-  EventSearchDelegate(this.eventRepository);
-
-  @override
-  List<Widget>? buildActions(BuildContext context) {
-    return [
-      IconButton(
-        icon: const Icon(Icons.clear),
-        onPressed: () {
-          query = '';
-          showSuggestions(context);
-        },
-      ),
-    ];
-  }
-
-  @override
-  Widget? buildLeading(BuildContext context) {
-    return IconButton(
-      icon: const Icon(Icons.arrow_back),
-      onPressed: () {
-        close(context, null);
-      },
-    );
-  }
-
-  @override
-  Widget buildResults(BuildContext context) {
-    return FutureBuilder<List<Event>>(
-      future: eventRepository.searchEventsByTitle(query),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        } else if (snapshot.hasError) {
-          return Center(child: Text('Erreur : ${snapshot.error}'));
-        } else if (snapshot.hasData) {
-          final events = snapshot.data!;
-          if (events.isEmpty) {
-            return const Center(child: Text('Aucun événement trouvé'));
-          }
-          return ListView.builder(
-            itemCount: events.length,
-            itemBuilder: (context, index) {
-              final event = events[index];
-              return ListTile(
-                title: Text(event.title),
-                subtitle: Text('${event.category} - ${event.startDate}'),
-                onTap: () {
-                  close(context, null);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => MasterDetailsScreen(event: event),
+                    ],
+                  ),
+                  TextButton.icon(
+                    onPressed: () {
+                      // TODO: Page de favoris
+                    },
+                    icon: const Icon(Icons.star_border,
+                        color: AppTheme.primaryPurple),
+                    label: const Text(
+                      'Favoris',
+                      style: TextStyle(color: AppTheme.primaryPurple),
                     ),
+                  )
+                ],
+              ),
+            ),
+
+            // Search + Filters
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      onChanged: _onSearchChanged,
+                      decoration: InputDecoration(
+                        hintText: 'Que cherchez-vous ?',
+                        prefixIcon: const Icon(Icons.search),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide.none,
+                        ),
+                        filled: true,
+                        fillColor: Colors.grey.shade100,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  IconButton(
+                    onPressed: () => _openFilterSortSheet(context),
+                    icon: const Icon(Icons.tune,
+                        color: AppTheme.primaryPurple),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // Liste des événements
+            Expanded(
+              child: FutureBuilder<List<Event>>(
+                future: eventsFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (snapshot.hasError) {
+                    return Center(child: Text('Erreur : ${snapshot.error}'));
+                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return const Center(child: Text('Aucun événement trouvé'));
+                  }
+
+                  final events = snapshot.data!;
+                  return ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    itemCount: events.length,
+                    itemBuilder: (context, index) {
+                      final event = events[index];
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 2,
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 12),
+                          title: Text(event.title,
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold)),
+                          subtitle:
+                              Text('${event.category} – ${event.startDate}'),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    MasterDetailsScreen(event: event),
+                              ),
+                            );
+                          },
+                        ),
+                      );
+                    },
                   );
                 },
-              );
-            },
-          );
-        } else {
-          return const Center(child: Text('Aucun événement trouvé'));
-        }
-      },
+              ),
+            ),
+          ],
+        ),
+      ),
     );
-  }
-
-  @override
-  Widget buildSuggestions(BuildContext context) {
-    return Container();
   }
 }
