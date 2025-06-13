@@ -55,7 +55,7 @@ chaudiere_app/
 | Plateforme | Statut |
 |------------|--------|
 | 🐧 Linux (Ubuntu) | ✅ |
-| 🪟 Windows | ⚠️ Non testé |
+| 🪟 Windows | ✅ |
 | 🍏 macOS | ⚠️ Non testé |
 
 ---
