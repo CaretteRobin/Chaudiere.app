@@ -81,10 +81,10 @@ flutter pub run flutter_launcher_icons
   - Init Flutter, navigation Master/Detail, design final, DB/API sync, thème, icône, favoris
 
 ### 🧪 Fonctionnalités & UI/UX
-- **Paul5400**  
+- **Paul Andrieu**  
   - Thème sombre, filtres par catégorie, design page favoris
 
-- **ValentinoLambert**  
+- **Valentino Lambert**  
   - Barre de recherche, tri des événements, filtrage par catégorie, tri & recherche initiale
 
 ---
