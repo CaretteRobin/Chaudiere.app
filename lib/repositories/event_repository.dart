@@ -4,7 +4,7 @@ import '../core/models/event.dart';
 import '../database/database_helper.dart';
 
 class EventRepository {
-  final String apiUrl = 'http://localhost:8080/api/evenements';
+  final String apiUrl = 'http://docketu.iutnc.univ-lorraine.fr:8084/api/evenements';
   final DatabaseHelper dbHelper = DatabaseHelper();
 
   /// Synchronise une seule fois les données de l’API vers SQLite
@@ -32,7 +32,7 @@ class EventRepository {
     return events;
   }
 
-  /// 🔍 Recherche locale dans les titres
+  /// Recherche locale dans les titres
   Future<List<Event>> searchEventsByTitle(String query) async {
     final events = await dbHelper.fetchEvents();
     return events
