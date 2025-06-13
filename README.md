@@ -80,7 +80,6 @@ flutter pub run flutter_launcher_icons
 - **Robin Carette**  
   - Init Flutter, navigation Master/Detail, design final, DB/API sync, thème, icône, favoris
 
-### 🧪 Fonctionnalités & UI/UX
 - **Paul Andrieu**  
   - Thème sombre, filtres par catégorie, design page favoris
 
